@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyinstaller pymupdf paddleocr opencv-python numpy pandas
+        pip install pyinstaller pymupdf paddleocr paddlepaddle opencv-python numpy pandas
 
     - name: Build standalone exe
       shell: cmd
@@ -37,7 +37,9 @@ jobs:
           --add-data "poppler-24.08.0;poppler-24.08.0" ^
           --add-data "Tesseract\\tesseract.exe;." ^
           --add-data "Tesseract\\tessdata;tessdata" ^
+          --hidden-import paddle ^
           main_processor.py
+
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
