@@ -38,7 +38,7 @@ jobs:
           main_processor.py
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ExtratorFaturas.exe
         path: dist/ExtratorFaturas.exe
