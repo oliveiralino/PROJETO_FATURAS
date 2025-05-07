@@ -17,6 +17,7 @@ jobs:
       run: copy /b assets.7z.* assets.7z
 
     - name: Unzip assets (Poppler & Tesseract)
+      shell: cmd
       run: 7z x assets.7z -o.
 
     - name: Set up Python 3.10
