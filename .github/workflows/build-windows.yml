@@ -13,6 +13,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Recombine 7z volumes into single archive
+      shell: cmd
       run: copy /b assets.7z.* assets.7z
 
     - name: Unzip assets (Poppler & Tesseract)
