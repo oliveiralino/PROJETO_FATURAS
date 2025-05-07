@@ -31,12 +31,12 @@ jobs:
         pip install pyinstaller pymupdf paddleocr opencv-python numpy pandas
 
     - name: Build standalone exe
+      shell: cmd
       run: |
-        pyinstaller --clean --onefile --noconsole \
-          --name ExtratorFaturas \
-          --add-data "poppler-24.08.0;poppler-24.08.0" \
-          --add-data "Tesseract\\tesseract.exe;." \
-          --add-data "Tesseract\\tessdata;tessdata" \
+        pyinstaller --clean --onefile --noconsole --name ExtratorFaturas ^
+          --add-data "poppler-24.08.0;poppler-24.08.0" ^
+          --add-data "Tesseract\\tesseract.exe;." ^
+          --add-data "Tesseract\\tessdata;tessdata" ^
           main_processor.py
 
     - name: Upload artifact
