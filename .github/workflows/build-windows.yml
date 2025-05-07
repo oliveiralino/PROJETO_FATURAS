@@ -1,5 +1,37 @@
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
     - name: Recombine 7z volumes into single archive
       run: copy /b assets.7z.* assets.7z
 
     - name: Unzip assets (Poppler & Tesseract)
       run: 7z x assets.7z -o.
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller pymupdf paddleocr opencv-python numpy pandas
+
+    - name: Build standalone exe
+      run: |
+        pyinstaller --clean --onefile --noconsole \
+          --name ExtratorFaturas \
+          --add-data "poppler-24.08.0;poppler-24.08.0" \
+          --add-data "Tesseract\\tesseract.exe;." \
+          --add-data "Tesseract\\tessdata;tessdata" \
+          main_processor.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ExtratorFaturas.exe
+        path: dist/ExtratorFaturas.exe
