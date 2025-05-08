@@ -14,11 +14,8 @@ from pathlib import Path
 import logging
 import fitz  # PyMuPDF
 import pandas as pd
-# Garante que cx_Freeze inclua estes pacotes
 import numpy
 import paddleocr
-# Você pode listar aqui também:
-# import cv2, fitz, pandas
 
 
 # Import módulos de extração
