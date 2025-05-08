@@ -37,35 +37,34 @@ USE_GPU = False
 PADDLE_OK = False
 OCR_ENGINE_OK = False
 ocr_engine = None
+
+# --- Inicialização do PaddleOCR (agora com model_dir corrigido) ---
 try:
-    # Tenta importar PaddleOCR e inicializar o engine
-    if 'PaddleOCR' in globals(): # Verifica se a classe foi importada
-        if ocr_engine is None: # Inicializa só uma vez
-            ocr_engine = PaddleOCR(
-            use_angle_cls=True,
-            lang=OCR_LANG,
-            show_log=True,
-            use_gpu=USE_GPU,
-            # a pasta “det” existe no bundle, não “det_db”
-            det_model_dir   = os.path.join(model_dir, "det"),
-            # a pasta “rec” existe, não “rec_crnn”
-            rec_model_dir   = os.path.join(model_dir, "rec"),
-            # a pasta “cls” batia com o debug
-            cls_model_dir   = os.path.join(model_dir, "cls"),
-            # o módulo de layout/estrutura está em “layout”
-            structure_model_dir = os.path.join(model_dir, "layout")
-        )
+    # só importa depois de sabermos model_dir
+    from paddleocr import PaddleOCR
 
+    ocr_engine = PaddleOCR(
+        use_angle_cls=True,
+        lang=OCR_LANG,
+        show_log=True,
+        use_gpu=USE_GPU,
+        det_model_dir       = os.path.join(model_dir, "det"),
+        rec_model_dir       = os.path.join(model_dir, "rec"),
+        cls_model_dir       = os.path.join(model_dir, "cls"),
+        structure_model_dir = os.path.join(model_dir, "layout")
+    )
 
-    else:
-         logging.warning("[OCR Module] Classe PaddleOCR não importada.")
-except NameError:
-    logging.warning("[OCR Module] PaddleOCR não está definido (falha na importação).")
-    PADDLE_OK = False
+    # se chegou aqui, carregou sem exceção
+    PADDLE_OK = True
+    OCR_ENGINE_OK = True
+    logging.info(f"[OCR Module] PaddleOCR engine inicializado com modelos em {model_dir}")
+
 except Exception as e:
-    logging.error(f"[OCR Module] Falha CRÍTICA ao inicializar PaddleOCR Engine: {e}")
+    # mantém o debug visível
+    logging.error(f"[OCR Module] Falha CRÍTICA ao inicializar PaddleOCR Engine: {e}", exc_info=True)
     PADDLE_OK = False
     OCR_ENGINE_OK = False
+
 
 # === Funções Auxiliares
 def remove_accents(input_str):
