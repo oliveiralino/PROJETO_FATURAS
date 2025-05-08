@@ -1,43 +1,43 @@
 # setup_cxfreeze.py
 from cx_Freeze import setup, Executable
-import os, site, shutil
+import os, site
 
 base = "Win32GUI"
 EMBED_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-# Discover where site-packages live
+# Discover site-packages paths on runner
 site_packages = site.getsitepackages()
-sp_path = site_packages[0] if site_packages else EMBED_ROOT
+sp = site_packages[0] if site_packages else EMBED_ROOT
 
-# Build list of data files (poppler, paddle_models, and full packages)
+# Helper to include an installed package directory
+def pkg_dir(pkg_name):
+    src = os.path.join(sp, pkg_name)
+    if os.path.isdir(src): return (src, pkg_name)
+    # try top-level with hyphen/underscore
+    alt = os.path.join(sp, pkg_name.replace('-', '_'))
+    if os.path.isdir(alt): return (alt, pkg_name)
+    raise FileNotFoundError(f"Package folder for {pkg_name} not found in {sp}")
+
+# Build include_files list
 include_files = []
-# Include poppler and paddle_models folders
-for folder in ("poppler-24.08.0", "paddle_models"):
-    src = os.path.join(EMBED_ROOT, folder)
-    if os.path.isdir(src):
-        include_files.append((src, folder))
-
-# Also include entire packages that finder fails on
-for pkg in ("numpy", "cv2", "fitz", "pandas", "paddle", "paddleocr"):
-    src = os.path.join(sp_path, pkg)
-    if os.path.exists(src):
-        include_files.append((src, pkg))
+# poppler and OCR model data
+include_files.append((os.path.join(EMBED_ROOT, "poppler-24.08.0"), "poppler-24.08.0"))
+include_files.append((os.path.join(EMBED_ROOT, "paddle_models"), "paddle_models"))
+# Also include full package folders for modules that cx_Freeze misses
+for pkg in ["numpy", "cv2", "fitz", "pandas", "paddle", "paddleocr"]:
+    include_files.append(pkg_dir(pkg))
 
 build_exe_options = {
-    # ensure module search also checks site-packages
+    # search paths for module finder
     "path": site_packages,
-    # modules to include automatically
-    "packages": ["numpy", "cv2", "fitz", "pandas", "paddle", "paddleocr"],
+    # explicitly include modules
+    "packages": ["numpy", "cv2", "fitz", "pandas", "paddleocr"],
     # exclude unwanted
     "excludes": ["tkinter", "email", "http", "xml", "unittest"],
-    # data files and package directories
+    # include data files
     "include_files": include_files,
-    # include MSVC runtime
+    # include MSVC redistributables
     "include_msvcr": True,
-    # keep these packages as loose files (not zipped)
-    "zip_exclude_packages": ["numpy", "cv2", "fitz", "pandas", "paddle", "paddleocr"],
-    # zip everything else
-    "zip_include_packages": ["*"]
 }
 
 setup(
