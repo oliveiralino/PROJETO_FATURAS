@@ -19,7 +19,7 @@ build_exe_options = {
         "paddleocr",
         "paddle",
         "ppocr",          # OCR subpackage
-        "ppstructure",    # OCR structure subpackage
+        # "ppstructure" removed because it's not a top-level package
         "pandas",
     ],
     # Exclude unused standard libraries
