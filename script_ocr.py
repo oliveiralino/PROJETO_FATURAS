@@ -44,13 +44,18 @@ try:
             ocr_engine = PaddleOCR(
             use_angle_cls=True,
             lang=OCR_LANG,
-            show_log=False,
+            show_log=True,
             use_gpu=USE_GPU,
-            det_model_dir   = os.path.join(model_dir, "det_db"),        # detector
-            rec_model_dir   = os.path.join(model_dir, "rec_crnn"),      # recognizer
-            cls_model_dir   = os.path.join(model_dir, "cls"),           # angle classifier
-            structure_model_dir = os.path.join(model_dir, "ppstructure") # se usar o módulo de estrutura
+            # a pasta “det” existe no bundle, não “det_db”
+            det_model_dir   = os.path.join(model_dir, "det"),
+            # a pasta “rec” existe, não “rec_crnn”
+            rec_model_dir   = os.path.join(model_dir, "rec"),
+            # a pasta “cls” batia com o debug
+            cls_model_dir   = os.path.join(model_dir, "cls"),
+            # o módulo de layout/estrutura está em “layout”
+            structure_model_dir = os.path.join(model_dir, "layout")
         )
+
 
     else:
          logging.warning("[OCR Module] Classe PaddleOCR não importada.")
