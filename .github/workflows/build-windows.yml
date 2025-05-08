@@ -42,15 +42,15 @@ jobs:
     - name: Build standalone exe
       shell: cmd
       run: |
-        pyinstaller --clean --onefile --console --name ExtratorFaturas ^
+        pyinstaller --clean --console --onefile --name ExtratorFaturas ^
           --additional-hooks-dir hooks ^
           --hidden-import=paddle ^
           --collect-all numpy ^
           --collect-all paddleocr ^
+          --collect-all paddle ^
           --add-data poppler-24.08.0;poppler-24.08.0 ^
           --add-data paddle_models;paddle_models ^
           main_processor.py
-
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
