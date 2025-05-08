@@ -47,3 +47,7 @@ setup(
     options={"build_exe": build_exe_options},
     executables=[Executable("main_processor.py", base=base)]
 )
+
+    options={"build_exe": build_exe_options},
+    executables=[Executable("main_processor.py", base=base)]
+)
