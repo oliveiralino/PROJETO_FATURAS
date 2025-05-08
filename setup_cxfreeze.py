@@ -5,35 +5,31 @@ import os, site
 base = "Win32GUI"
 EMBED_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-# aponta para onde o runner instalou site‑packages
+# Discover where site-packages are installed on the runner
 site_packages = site.getsitepackages()
 
 build_exe_options = {
-    # caminho extra onde procurar pacotes
+    # Search for modules in these paths
     "path": site_packages,
-    # bibliotecas que seu código importa
+    # Include entire packages your app depends on
     "packages": [
-        "fitz",      # PyMuPDF
-        "cv2",       # OpenCV
+        "fitz",           # PyMuPDF
+        "cv2",            # OpenCV
         "numpy",
         "paddleocr",
         "paddle",
+        "ppocr",          # OCR subpackage
+        "ppstructure",    # OCR structure subpackage
         "pandas",
     ],
-    # módulos puros que precisam ser forçados
-    "includes": [
-        "paddle", 
-        "paddleocr.tools",
-        "ppocr",
-        "ppstructure"
-    ],
-    # pacotes que não interessam
+    # Exclude unused standard libraries
     "excludes": ["tkinter","email","http","xml","unittest"],
-    # arquivos/diretórios de dados a copiar
+    # Data files and folders to include in build
     "include_files": [
-        ("poppler-24.08.0","poppler-24.08.0"),
-        ("paddle_models","paddle_models"),
+        ("poppler-24.08.0", "poppler-24.08.0"),
+        ("paddle_models", "paddle_models"),
     ],
+    # Include Microsoft Visual C++ runtime DLLs
     "include_msvcr": True,
 }
 
