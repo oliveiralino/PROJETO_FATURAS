@@ -5,31 +5,38 @@ import os, site
 base = "Win32GUI"
 EMBED_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-# Discover where site-packages are installed on the runner
+# Paths where site-packages live on the runner
 site_packages = site.getsitepackages()
 
 build_exe_options = {
-    # Search for modules in these paths
+    # additional search paths for modules
     "path": site_packages,
-    # Include entire packages your app depends on
+
+    # top-level packages to include
     "packages": [
-        "fitz",           # PyMuPDF
-        "cv2",            # OpenCV
-        "numpy",
-        "paddleocr",
-        "paddle",
-        "ppocr",          # OCR subpackage
-        # "ppstructure" removed because it's not a top-level package
-        "pandas",
+        "fitz",      # PyMuPDF
+        "cv2",       # OpenCV
+        "numpy",     # numeric
+        "paddleocr", # OCR engine
+        "paddle",    # PaddlePaddle core
+        "ppocr",     # OCR subpackage
+        "pandas",    # dataframes
     ],
-    # Exclude unused standard libraries
+
+    # modules to exclude
     "excludes": ["tkinter","email","http","xml","unittest"],
-    # Data files and folders to include in build
+
+    # include entire directories or files
     "include_files": [
         ("poppler-24.08.0", "poppler-24.08.0"),
-        ("paddle_models", "paddle_models"),
+        ("paddle_models",     "paddle_models"),
     ],
-    # Include Microsoft Visual C++ runtime DLLs
+
+    # control zipping: keep heavy packages unpacked
+    "zip_include_packages": ["*"],
+    "zip_exclude_packages": ["numpy","paddle","paddleocr","ppocr"],
+
+    # include MSVC runtime
     "include_msvcr": True,
 }
 
