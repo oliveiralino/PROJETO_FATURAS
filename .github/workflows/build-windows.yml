@@ -44,10 +44,13 @@ jobs:
       run: |
         pyinstaller --clean --onefile --noconsole --name ExtratorFaturas ^
           --additional-hooks-dir hooks ^
-          --hidden-import paddle ^ 
-          --add-data "poppler-24.08.0;poppler-24.08.0" ^
-          --add-data "paddle_models;paddle_models" ^
+          --hidden-import=paddle ^
+          --collect-all numpy ^
+          --collect-all paddleocr ^
+          --add-data poppler-24.08.0;poppler-24.08.0 ^
+          --add-data paddle_models;paddle_models ^
           main_processor.py
+
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
