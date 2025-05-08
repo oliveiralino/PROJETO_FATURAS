@@ -5,8 +5,21 @@ import os, site
 base = "Win32GUI"
 EMBED_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-# Paths where site-packages live on the runner
+# Discover where site-packages live on the runner
 site_packages = site.getsitepackages()
+# Use the first site-packages path
+sp_path = site_packages[0] if site_packages else EMBED_ROOT
+
+# Prepare include_files: poppler, paddle_models, and the paddleocr & paddle packages
+include_files = [
+    ("poppler-24.08.0", "poppler-24.08.0"),
+    ("paddle_models", "paddle_models"),
+]
+# Include the paddleocr and paddle package directories
+for pkg in ("paddleocr", "paddle"):  
+    src = os.path.join(sp_path, pkg)
+    if os.path.exists(src):
+        include_files.append((src, pkg))
 
 build_exe_options = {
     # additional search paths for modules
@@ -16,25 +29,17 @@ build_exe_options = {
     "packages": [
         "fitz",      # PyMuPDF
         "cv2",       # OpenCV
-        "numpy",     # numeric
+        "numpy",
         "paddleocr", # OCR engine
         "paddle",    # PaddlePaddle core
-        "ppocr",     # OCR subpackage
-        "pandas",    # dataframes
+        "pandas",
     ],
 
     # modules to exclude
     "excludes": ["tkinter","email","http","xml","unittest"],
 
-    # include entire directories or files
-    "include_files": [
-        ("poppler-24.08.0", "poppler-24.08.0"),
-        ("paddle_models",     "paddle_models"),
-    ],
-
-    # control zipping: keep heavy packages unpacked
-    "zip_include_packages": ["*"],
-    "zip_exclude_packages": ["numpy","paddle","paddleocr","ppocr"],
+    # include additional files and directories
+    "include_files": include_files,
 
     # include MSVC runtime
     "include_msvcr": True,
