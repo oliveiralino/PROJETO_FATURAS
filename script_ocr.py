@@ -13,13 +13,21 @@ import sys
 # Quando empacotado pelo PyInstaller, tudo é extraído em sys._MEIPASS
 bundle_dir = getattr(sys, "_MEIPASS", os.path.abspath(os.path.dirname(__file__)))
 
-# Aqui é onde o workflow adicionou sua pasta de modelos
-model_dir = os.path.join(bundle_dir, "paddle_models")
+# caminho bruto onde colocamos a pasta paddle_models via --add-data
+raw_model_dir = os.path.join(bundle_dir, "paddle_models")
 
-print(f"[DEBUG] bundle_dir   = {bundle_dir}")
-print(f"[DEBUG] model_dir    = {model_dir}")
-print(f"[DEBUG] exists?      = {os.path.isdir(model_dir)}")
-print(f"[DEBUG] listing      = {os.listdir(model_dir) if os.path.isdir(model_dir) else 'N/A'}")
+# corrige caso tenha ficado aninhado paddle_models/paddle_models
+if os.path.isdir(os.path.join(raw_model_dir, "paddle_models")):
+    model_dir = os.path.join(raw_model_dir, "paddle_models")
+else:
+    model_dir = raw_model_dir
+
+# debug para verificação
+print(f"[DEBUG] bundle_dir = {bundle_dir}")
+print(f"[DEBUG] model_dir  = {model_dir}")
+print(f"[DEBUG] exists?    = {os.path.isdir(model_dir)}")
+print(f"[DEBUG] listing    = {os.listdir(model_dir) if os.path.isdir(model_dir) else 'N/A'}")
+
 
 
 PDF_RESOLUTION_MATRIX = fitz.Matrix(3, 3)
