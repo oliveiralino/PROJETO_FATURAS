@@ -8,6 +8,14 @@ import logging
 import io
 import unicodedata
 import os
+import sys
+
+# Quando empacotado pelo PyInstaller, tudo é extraído em sys._MEIPASS
+bundle_dir = getattr(sys, "_MEIPASS", os.path.abspath(os.path.dirname(__file__)))
+
+# Aqui é onde o workflow adicionou sua pasta de modelos
+model_dir = os.path.join(bundle_dir, "paddle_models")
+
 
 PDF_RESOLUTION_MATRIX = fitz.Matrix(3, 3)
 OCR_LANG = 'latin'
@@ -20,10 +28,17 @@ try:
     # Tenta importar PaddleOCR e inicializar o engine
     if 'PaddleOCR' in globals(): # Verifica se a classe foi importada
         if ocr_engine is None: # Inicializa só uma vez
-            ocr_engine = PaddleOCR(use_angle_cls=True, lang=OCR_LANG, show_log=False, use_gpu=USE_GPU)
-            PADDLE_OK = True
-            OCR_ENGINE_OK = True
-            logging.info(f"[OCR Module] PaddleOCR engine inicializado (lang='{OCR_LANG}', gpu={USE_GPU}).")
+            ocr_engine = PaddleOCR(
+            use_angle_cls=True,
+            lang=OCR_LANG,
+            show_log=False,
+            use_gpu=USE_GPU,
+            det_model_dir   = os.path.join(model_dir, "det_db"),        # detector
+            rec_model_dir   = os.path.join(model_dir, "rec_crnn"),      # recognizer
+            cls_model_dir   = os.path.join(model_dir, "cls"),           # angle classifier
+            structure_model_dir = os.path.join(model_dir, "ppstructure") # se usar o módulo de estrutura
+        )
+
     else:
          logging.warning("[OCR Module] Classe PaddleOCR não importada.")
 except NameError:
