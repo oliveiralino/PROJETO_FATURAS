@@ -16,6 +16,11 @@ bundle_dir = getattr(sys, "_MEIPASS", os.path.abspath(os.path.dirname(__file__))
 # Aqui é onde o workflow adicionou sua pasta de modelos
 model_dir = os.path.join(bundle_dir, "paddle_models")
 
+print(f"[DEBUG] bundle_dir   = {bundle_dir}")
+print(f"[DEBUG] model_dir    = {model_dir}")
+print(f"[DEBUG] exists?      = {os.path.isdir(model_dir)}")
+print(f"[DEBUG] listing      = {os.listdir(model_dir) if os.path.isdir(model_dir) else 'N/A'}")
+
 
 PDF_RESOLUTION_MATRIX = fitz.Matrix(3, 3)
 OCR_LANG = 'latin'
