@@ -23,10 +23,11 @@ jobs:
     - name: Recombine PaddleOCR models
       shell: cmd
       run: copy /b paddle_models.7z.* paddle_models.7z
-
+    
     - name: Unzip PaddleOCR models
       shell: cmd
-      run: 7z x paddle_models.7z -o paddle_models
+      run: 7z x paddle_models.7z -opaddle_models
+
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
