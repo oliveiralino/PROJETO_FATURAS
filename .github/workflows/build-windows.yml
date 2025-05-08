@@ -20,6 +20,14 @@ jobs:
       shell: cmd
       run: 7z x poppler.7z -o.
 
+    - name: Recombine PaddleOCR models
+      shell: cmd
+      run: copy /b paddle_models.7z.* paddle_models.7z
+
+    - name: Unzip PaddleOCR models
+      shell: cmd
+      run: 7z x paddle_models.7z -o paddle_models
+
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
@@ -37,6 +45,7 @@ jobs:
           --additional-hooks-dir hooks ^
           --hidden-import paddle ^
           --add-data "poppler-24.08.0;poppler-24.08.0" ^
+          --add-data "paddle_models;paddle_models" ^
           main_processor.py
 
     - name: Upload artifact
