@@ -14,12 +14,6 @@ PDF_RESOLUTION_MATRIX = fitz.Matrix(3, 3)
 OCR_LANG = 'latin'
 USE_GPU = False
 
-logging.basicConfig(level=logging.DEBUG,
-                    format="%(asctime)s [%(levelname)s] %(message)s")
-
-print("[DEBUG] Entrando em script_ocr.py")
-
-
 # Quando empacotado pelo PyInstaller, tudo é extraído em sys._MEIPASS
 bundle_dir = getattr(sys, "_MEIPASS", os.path.abspath(os.path.dirname(__file__)))
 
@@ -31,12 +25,6 @@ if os.path.isdir(os.path.join(raw_model_dir, "paddle_models")):
     model_dir = os.path.join(raw_model_dir, "paddle_models")
 else:
     model_dir = raw_model_dir
-
-# debug para verificação
-print(f"[DEBUG] bundle_dir = {bundle_dir}")
-print(f"[DEBUG] model_dir  = {model_dir}")
-print(f"[DEBUG] exists?    = {os.path.isdir(model_dir)}")
-print(f"[DEBUG] listing    = {os.listdir(model_dir) if os.path.isdir(model_dir) else 'N/A'}")
 
 # ─── Inicialização do PaddleOCR com model_dir ──────────────────────
 PADDLE_OK = False
@@ -59,10 +47,6 @@ try:
     logging.info(f"[OCR Module] PaddleOCR engine inicializado com modelos em {model_dir}")
 except Exception:
     logging.exception("[OCR Module] Falha CRÍTICA ao inicializar PaddleOCR Engine")
-# ─────────────────────────────────────────────────────────────────────
-
-print(f"[DEBUG] PADDLE_OK={PADDLE_OK}  OCR_ENGINE_OK={OCR_ENGINE_OK}")
-
 
 # === Funções Auxiliares
 def remove_accents(input_str):
