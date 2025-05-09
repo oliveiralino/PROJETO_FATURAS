@@ -19,13 +19,13 @@ jobs:
 
     - name: Unzip Poppler
       shell: cmd
-      run: 7z x poppler.7z -o.
+      run: 7z x poppler.7z -o"poppler-24.08.0"
 
     - name: Recombine and unpack OCR models
       shell: cmd
       run: |
         copy /b paddle_models.7z.* paddle_models.7z
-        7z x paddle_models.7z -opaddle_models
+        7z x paddle_models.7z -o"paddle_models"
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
@@ -41,7 +41,12 @@ jobs:
       shell: cmd
       run: |
         pyinstaller --clean --onefile --noconsole --name ExtratorFaturas ^
+          --additional-hooks-dir hooks ^
           --hidden-import paddle ^
+          --collect-submodules paddleocr ^
+          --collect-submodules paddle ^
+          --collect-submodules ppocr ^
+          --collect-submodules ppstructure ^
           --add-data "poppler-24.08.0;poppler-24.08.0" ^
           --add-data "paddle_models;paddle_models" ^
           main_processor.py
@@ -51,3 +56,4 @@ jobs:
       with:
         name: ExtratorFaturas.exe
         path: dist/ExtratorFaturas.exe
+
