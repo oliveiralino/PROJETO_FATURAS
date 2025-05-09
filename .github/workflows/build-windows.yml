@@ -43,14 +43,14 @@ jobs:
         pyinstaller --clean --onefile --noconsole --name ExtratorFaturas ^
           --additional-hooks-dir hooks ^
           --hidden-import paddle ^
-          --collect-submodules paddleocr ^
-          --collect-submodules paddle ^
-          --collect-submodules ppocr ^
-          --collect-submodules ppstructure ^
+          --collect-all paddleocr ^
+          --collect-all paddle ^
+          --collect-all ppocr ^
+          --collect-all ppstructure ^
           --add-data "poppler-24.08.0;poppler-24.08.0" ^
           --add-data "paddle_models;paddle_models" ^
           main_processor.py
-
+          
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
