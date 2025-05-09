@@ -10,6 +10,10 @@ import unicodedata
 import os
 import sys
 
+PDF_RESOLUTION_MATRIX = fitz.Matrix(3, 3)
+OCR_LANG = 'latin'
+USE_GPU = False
+
 logging.basicConfig(level=logging.DEBUG,
                     format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -58,10 +62,6 @@ except Exception:
 # ─────────────────────────────────────────────────────────────────────
 
 print(f"[DEBUG] PADDLE_OK={PADDLE_OK}  OCR_ENGINE_OK={OCR_ENGINE_OK}")
-
-PDF_RESOLUTION_MATRIX = fitz.Matrix(3, 3)
-OCR_LANG = 'latin'
-USE_GPU = False
 
 
 # === Funções Auxiliares
