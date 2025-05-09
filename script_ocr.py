@@ -28,6 +28,29 @@ print(f"[DEBUG] model_dir  = {model_dir}")
 print(f"[DEBUG] exists?    = {os.path.isdir(model_dir)}")
 print(f"[DEBUG] listing    = {os.listdir(model_dir) if os.path.isdir(model_dir) else 'N/A'}")
 
+# ─── Inicialização do PaddleOCR com model_dir ──────────────────────
+PADDLE_OK = False
+OCR_ENGINE_OK = False
+ocr_engine = None
+try:
+    from paddleocr import PaddleOCR
+    ocr_engine = PaddleOCR(
+        use_angle_cls=True,
+        lang=OCR_LANG,
+        show_log=True,
+        use_gpu=USE_GPU,
+        det_model_dir       = os.path.join(model_dir, "det"),
+        rec_model_dir       = os.path.join(model_dir, "rec"),
+        cls_model_dir       = os.path.join(model_dir, "cls"),
+        structure_model_dir = os.path.join(model_dir, "layout")
+    )
+    PADDLE_OK = True
+    OCR_ENGINE_OK = True
+    logging.info(f"[OCR Module] PaddleOCR engine inicializado com modelos em {model_dir}")
+except Exception:
+    logging.exception("[OCR Module] Falha CRÍTICA ao inicializar PaddleOCR Engine")
+# ─────────────────────────────────────────────────────────────────────
+
 
 PDF_RESOLUTION_MATRIX = fitz.Matrix(3, 3)
 OCR_LANG = 'latin'
