@@ -42,13 +42,12 @@ jobs:
     - name: Build standalone exe
       shell: cmd
       run: |
-        pyinstaller --clean --onefile --name ExtratorFaturas ^
-          --additional-hooks-dir hooks ^
+        pyinstaller ^
+          --clean ^
+          --onefile ^
+          --noconsole ^
+          --name ExtratorFaturas ^
           --hidden-import paddle ^
-          --collect-all paddleocr ^
-          --collect-all paddle ^
-          --collect-all ppocr ^
-          --collect-all ppstructure ^
           --add-data "poppler-24.08.0;poppler-24.08.0" ^
           --add-data "paddle_models;paddle_models" ^
           main_processor.py
