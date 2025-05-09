@@ -10,6 +10,12 @@ import unicodedata
 import os
 import sys
 
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s [%(levelname)s] %(message)s")
+
+print("[DEBUG] Entrando em script_ocr.py")
+
+
 # Quando empacotado pelo PyInstaller, tudo é extraído em sys._MEIPASS
 bundle_dir = getattr(sys, "_MEIPASS", os.path.abspath(os.path.dirname(__file__)))
 
@@ -51,6 +57,7 @@ except Exception:
     logging.exception("[OCR Module] Falha CRÍTICA ao inicializar PaddleOCR Engine")
 # ─────────────────────────────────────────────────────────────────────
 
+print(f"[DEBUG] PADDLE_OK={PADDLE_OK}  OCR_ENGINE_OK={OCR_ENGINE_OK}")
 
 PDF_RESOLUTION_MATRIX = fitz.Matrix(3, 3)
 OCR_LANG = 'latin'
