@@ -25,7 +25,7 @@ jobs:
       shell: cmd
       run: |
         copy /b paddle_models.7z.* paddle_models.7z
-        7z x paddle_models.7z -o paddle_models
+        7z x paddle_models.7z -opaddle_models
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
