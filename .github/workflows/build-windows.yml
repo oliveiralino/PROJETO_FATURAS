@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -17,15 +16,18 @@ jobs:
       shell: cmd
       run: copy /b poppler.7z.* poppler.7z
 
-    - name: Unzip Poppler
+    - name: Unzip assets (Poppler)
       shell: cmd
-      run: 7z x poppler.7z -o"poppler-24.08.0"
+      run: 7z x poppler.7z -o.
 
-    - name: Recombine and unpack OCR models
+    - name: Recombine PaddleOCR models
       shell: cmd
-      run: |
-        copy /b paddle_models.7z.* paddle_models.7z
-        7z x paddle_models.7z -o"paddle_models"
+      run: copy /b paddle_models.7z.* paddle_models.7z
+    
+    - name: Unzip PaddleOCR models
+      shell: cmd
+      run: 7z x paddle_models.7z -opaddle_models
+
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
@@ -35,8 +37,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyinstaller pymupdf paddleocr paddlepaddle opencv-python numpy pandas openpyxl
-
+        pip install cx-Freeze pyinstaller pymupdf paddleocr paddlepaddle opencv-python numpy pandas openpyxl
     - name: Build standalone exe
       shell: cmd
       run: |
@@ -50,10 +51,8 @@ jobs:
           --add-data "poppler-24.08.0;poppler-24.08.0" ^
           --add-data "paddle_models;paddle_models" ^
           main_processor.py
-          
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: ExtratorFaturas.exe
         path: dist/ExtratorFaturas.exe
-
