@@ -25,6 +25,14 @@ import script_ocr    # Seu script para faturas OCR
 # Configuração logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s')
 
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename="extratorfaturas.log",
+    filemode="w",
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
 # Variáveis de controle globais para GUI
 pasta_pdfs_var = None
 arquivo_saida_var = None
