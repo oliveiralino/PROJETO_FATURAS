@@ -41,7 +41,7 @@ jobs:
     - name: Build standalone exe
       shell: cmd
       run: |
-        pyinstaller --clean --onefile --name ExtratorFaturas ^
+        pyinstaller --clean --onefile --noconsole --name ExtratorFaturas ^
           --additional-hooks-dir hooks ^
           --hidden-import paddle ^
           --collect-all paddleocr ^
