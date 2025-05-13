@@ -24,9 +24,7 @@ jobs:
       shell: cmd
       run: |
         7z x paddle_models.7z -o.
-        ren paddle_models paddle_models  # Garante que o nome da pasta está correto
         7z x poppler.7z -o.
-        ren poppler poppler-24.08.0 # Garante que o nome da pasta está correto
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
