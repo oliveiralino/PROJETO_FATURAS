@@ -12,22 +12,21 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
 
-    - name: Recombine 7z volumes into single archive
+    - name: Recombine 7z volumes into single archive (Poppler)
       shell: cmd
       run: copy /b poppler.7z.* poppler.7z
 
-    - name: Unzip assets (Poppler)
-      shell: cmd
-      run: 7z x poppler.7z -o.
-
-    - name: Recombine PaddleOCR models
+    - name: Recombine 7z volumes into single archive (PaddleOCR)
       shell: cmd
       run: copy /b paddle_models.7z.* paddle_models.7z
     
-    - name: Unzip PaddleOCR models
+    - name: Unzip assets (PaddleOCR and Poppler)
       shell: cmd
-      run: 7z x paddle_models.7z -opaddle_models
-
+      run: |
+        7z x paddle_models.7z -o.
+        ren paddle_models paddle_models  # Garante que o nome da pasta está correto
+        7z x poppler.7z -o.
+        ren poppler poppler-24.08.0 # Garante que o nome da pasta está correto
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
@@ -41,15 +40,15 @@ jobs:
     - name: Build standalone exe
       shell: cmd
       run: |
-        pyinstaller --clean --onefile --name ExtratorFaturas ^
+        pyinstaller --clean --onefile --noconsole --name ExtratorFaturas ^
           --additional-hooks-dir hooks ^
           --hidden-import paddle ^
           --collect-all paddleocr ^
           --collect-all paddle ^
           --collect-all ppocr ^
           --collect-all ppstructure ^
-          --add-data "poppler-24.08.0;poppler-24.08.0" ^
-          --add-data "paddle_models;paddle_models" ^
+          --add-data "poppler-24.08.0;poppler-24.08.0" ^ # Inclui a pasta Poppler descompactada
+          --add-data "paddle_models;paddle_models" ^ # Inclui a pasta PaddleOCR descompactada
           main_processor.py
     - name: Upload artifact
       uses: actions/upload-artifact@v4
