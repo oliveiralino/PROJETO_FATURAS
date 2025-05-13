@@ -52,7 +52,7 @@ def get_model_paths():
     # Certifique-se de que o caminho existe!
     if not os.path.isdir(model_dir):
         logging.error(f"Diretório de modelos não encontrado: {model_dir}")
-        messagebox.showerror("Erro", f"Diretório de modelos não encontrado: {model_dir}\nCertifique-se de que a pasta 'paddle_models' está no mesmo diretório do executável.")
+        # messagebox.showerror("Erro", f"Diretório de modelos não encontrado: {model_dir}\nCertifique-se de que a pasta 'paddle_models' está no mesmo diretório do executável.")
         return None, None, None, None # Retorna None para indicar erro
 
     det_model_dir = os.path.join(model_dir, 'det')
@@ -66,7 +66,7 @@ def get_model_paths():
          logging.error(f"Diretorio de modelos rec: {rec_model_dir}")
          logging.error(f"Diretorio de modelos cls: {cls_model_dir}")
          logging.error(f"Diretorio de modelos layout: {layout_model_dir}")
-         messagebox.showerror("Erro", "Um ou mais diretórios de modelos PaddleOCR não foram encontrados.\nCertifique-se de que a estrutura de diretórios dentro de 'paddle_models' está correta (det, rec, cls, layout).")
+         # messagebox.showerror("Erro", "Um ou mais diretórios de modelos PaddleOCR não foram encontrados.\nCertifique-se de que a estrutura de diretórios dentro de 'paddle_models' está correta (det, rec, cls, layout).")
          return None, None, None, None
 
     return det_model_dir, rec_model_dir, cls_model_dir, layout_model_dir
@@ -89,7 +89,7 @@ if det_model_dir and rec_model_dir and cls_model_dir and layout_model_dir:
 
     except Exception as e:
         logging.error(f"Erro ao inicializar PaddleOCR: {e}")
-        messagebox.showerror("Erro", f"Erro ao inicializar PaddleOCR.\nVerifique os logs para mais detalhes.\n{e}")
+        # messagebox.showerror("Erro", f"Erro ao inicializar PaddleOCR.\nVerifique os logs para mais detalhes.\n{e}")
         ocr = None  # Define ocr como None para evitar erros posteriores
 else:
     ocr = None
@@ -97,7 +97,7 @@ else:
 # Funções GUI
 def selecionar_pasta_pdfs():
     global pasta_pdfs_var, file_listbox # Assegura que estamos usando as globais
-    folder = filedialog.askdirectory(title="Selecione a pasta de PDFs")
+    folder = filedialog.askdirectory(title="Select PDFs folder: ")
     if folder:
         pasta_pdfs_var.set(folder)
         atualizar_listbox(folder)
@@ -106,7 +106,7 @@ def selecionar_arquivo_saida():
     global arquivo_saida_var # Assegura que estamos usando a global
     file = filedialog.asksaveasfilename(defaultextension=".xlsx",
                                        filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
-                                       title="Salvar resultados como")
+                                       title="Save result as: ")
     if file:
         arquivo_saida_var.set(file)
 
@@ -118,8 +118,8 @@ def atualizar_listbox(folder_path):
             for f in sorted(Path(folder_path).glob("*.pdf")):
                 file_listbox.insert(tk.END, f.name)
         except Exception as e:
-            logging.error(f"Erro ao listar arquivos da pasta {folder_path}: {e}")
-            messagebox.showerror("Erro de Pasta", f"Não foi possível listar arquivos da pasta: {folder_path}\n{e}")
+            logging.error(f"Error listing files in the folder {folder_path}: {e}")
+            # messagebox.showerror("Folder Error", f"Could not list files in the folder: {folder_path}\n{e}")
 
 
 def iniciar_extracao_gui():
@@ -129,13 +129,13 @@ def iniciar_extracao_gui():
     output_file_path = arquivo_saida_var.get().strip()
 
     if not folder or not os.path.isdir(folder):
-        messagebox.showerror("Erro de Entrada", "Por favor, selecione uma pasta de PDFs válida.")
+        messagebox.showerror("Input Error", "Please select a valid PDF folder.")
         return
     if not output_file_path:
-        messagebox.showerror("Erro de Entrada", "Por favor, selecione um arquivo de saída.")
+        messagebox.showerror("Input Error", "Please select an output file.")
         return
 
-    status_label.config(text="Processando... Por favor, aguarde.", fg="blue")
+    status_label.config(text="Processing... Please wait.", fg="blue")
     # Para garantir que a GUI atualize antes da thread começar
     if root:
         root.update_idletasks()
