@@ -26,12 +26,9 @@ def extract_invoice_fields(pdf_path):
             "OBSERVACIONES": extract_observaciones(doc),
         }
 
-        print(f"\n📝 {data['ARQUIVO']}")
-        print(f"🔢 DEBUG Valores -> BASE: {data['BASE IMPONIBLE']} | IMPUESTOS: {data['IMPUESTOS']} | TOTAL: {data['IMPORTE TOTAL']}")
-
-        # Detecção e extração por layout alternativo
+               # Detecção e extração por layout alternativo
         if is_special_layout(page):
-            print("🔁 Detecção de layout alternativo – aplicando extração especial...")
+           
             special_vals = extract_values_for_special_layout(page)
             for key, val in special_vals.items():
                 data[key] = val  # <-- sobrescreve SEM verificar se está preenchido
@@ -46,8 +43,7 @@ def extract_invoice_fields(pdf_path):
         return validate_totals(data)
 
     except Exception as e:
-        print(f"❌ Erro ao processar {pdf_path}: {e}")
-        print(traceback.format_exc())
+        
         return {"ARQUIVO": Path(pdf_path).name, "ERRO": str(e)}
 
 
@@ -153,12 +149,12 @@ def extract_valor_area(page, labels, label="VALOR", width_ratio=0.6, height_limi
             label_rect = candidates[0]
             search_rect = fitz.Rect(0, label_rect.y0 - 1, page.rect.width, label_rect.y1 + 1)
             text = page.get_text("text", clip=search_rect)
-            print(f"🔍 [DEBUG] {label} - linha capturada: '{text.strip()}'")
+            
             match = re.search(r"(-?[\d\s.,]{5,})", text)
             if match:
                 return normalize_number(match.group(1))
     except Exception as e:
-        print(f"⚠️ Erro ao extrair {label}: {e}")
+       
     return None
 
 def normalize_number(text):
@@ -277,9 +273,9 @@ def extract_values_for_special_layout(page):
         if match_total:
             special_data["IMPORTE TOTAL"] = normalize_number(match_total.group(1))
 
-        print(f"🔍 [Modelo Especial] Captura: {special_data}")
+        
     except Exception as e:
-        print(f"❌ Erro em modelo especial: {e}")
+        
     return special_data
 
 
@@ -308,7 +304,7 @@ def extract_from_text_fallback(page):
                     fallback_data[campo] = normalize_number(match.group(1))
         return fallback_data
     except Exception as e:
-        print(f"❌ Erro no fallback: {e}")
+
         return {}
 
 def extract_moeda(page):
@@ -339,6 +335,4 @@ def process_folder(folder_path, output_file):
 
 # --- Execução ---
 if __name__ == "__main__":
-    pasta_faturas = r"C:\\Users\\BR0321808688\\OneDrive - Enel Spa\\Área de Trabalho\\2025\\PILOTO OCR\\FATURAS"
-    arquivo_saida = r"C:\\Users\\BR0321808688\\OneDrive - Enel Spa\\Área de Trabalho\\2025\\PILOTO OCR\\FATURAS\\faturas_EXTRAIDAS_FINAL.xlsx"
     process_folder(pasta_faturas, arquivo_saida)
