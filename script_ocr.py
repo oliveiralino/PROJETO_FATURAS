@@ -342,7 +342,3 @@ def processar_pdf_ocr(pdf_path):
     # Chama a função principal de extração deste módulo
     extracted_data = extract_fields_from_text(ocr_lines, arquivo_nome)
     return extracted_data
-
-# Remover ou comentar o if __name__ == "__main__": do script original
-# if __name__ == "__main__":
-#     main()
