@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-main_processor.py
-
-Script principal com interface Tkinter para selecionar pasta de PDFs e arquivo de saída,
-e extrair dados usando script_digital.py ou script_ocr.py conforme tipo de fatura.
-"""
 import tkinter as tk
 from tkinter import filedialog, messagebox, Listbox, Scrollbar
 import threading
@@ -16,11 +8,12 @@ import fitz  # PyMuPDF
 import pandas as pd
 import numpy
 import paddleocr
+import sys 
 
 
 # Import módulos de extração
-import script_digital  # Seu script para faturas digitais
-import script_ocr    # Seu script para faturas OCR
+import script_digital  #  script para faturas digitais
+import script_ocr    #  script para faturas OCR
 
 # Configuração logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s')
@@ -38,10 +31,70 @@ pasta_pdfs_var = None
 arquivo_saida_var = None
 file_listbox = None
 status_label = None
-root = None # Adicionado para acesso global, se necessário para root.update_idletasks()
+root = None
+
+# Função para definir os caminhos dos modelos
+def get_model_paths():
+    """
+    Define os caminhos para os modelos PaddleOCR, considerando se o código está
+    rodando dentro de um executável congelado (PyInstaller).
+    """
+    base_model_dir = "paddle_models"  # Diretório base dos modelos
+
+    if getattr(sys, 'frozen', False):
+        # Código está rodando dentro do .exe
+        base_dir = os.path.dirname(sys.executable)
+        model_dir = os.path.join(base_dir, base_model_dir)
+    else:
+        # Código está rodando como script
+        model_dir = base_model_dir
+
+    # Certifique-se de que o caminho existe!
+    if not os.path.isdir(model_dir):
+        logging.error(f"Diretório de modelos não encontrado: {model_dir}")
+        messagebox.showerror("Erro", f"Diretório de modelos não encontrado: {model_dir}\nCertifique-se de que a pasta 'paddle_models' está no mesmo diretório do executável.")
+        return None, None, None, None # Retorna None para indicar erro
+
+    det_model_dir = os.path.join(model_dir, 'det')
+    rec_model_dir = os.path.join(model_dir, 'rec')
+    cls_model_dir = os.path.join(model_dir, 'cls')
+    layout_model_dir = os.path.join(model_dir, 'layout') # Adicionado o diretório layout
+
+    # Verificando se os diretorios existem
+    if not all([os.path.isdir(det_model_dir), os.path.isdir(rec_model_dir), os.path.isdir(cls_model_dir), os.path.isdir(layout_model_dir)]):
+         logging.error(f"Diretorio de modelos det: {det_model_dir}")
+         logging.error(f"Diretorio de modelos rec: {rec_model_dir}")
+         logging.error(f"Diretorio de modelos cls: {cls_model_dir}")
+         logging.error(f"Diretorio de modelos layout: {layout_model_dir}")
+         messagebox.showerror("Erro", "Um ou mais diretórios de modelos PaddleOCR não foram encontrados.\nCertifique-se de que a estrutura de diretórios dentro de 'paddle_models' está correta (det, rec, cls, layout).")
+         return None, None, None, None
+
+    return det_model_dir, rec_model_dir, cls_model_dir, layout_model_dir
+
+# Inicialização do PaddleOCR
+det_model_dir, rec_model_dir, cls_model_dir, layout_model_dir = get_model_paths()
+if det_model_dir and rec_model_dir and cls_model_dir and layout_model_dir:
+    try:
+        ocr = paddleocr.PaddleOCR(
+            use_angle_cls=True,
+            lang='en',
+            det_model_dir=det_model_dir,
+            rec_model_dir=rec_model_dir,
+            cls_model_dir=cls_model_dir,
+            layout_model_dir = layout_model_dir, # Adicionado
+            show_log=False # Desativa o log do PaddleOCR
+            #device = 'cpu' # Forçar CPU se necessário (teste)
+        )
+        logging.info("PaddleOCR inicializado com sucesso usando modelos locais.")
+
+    except Exception as e:
+        logging.error(f"Erro ao inicializar PaddleOCR: {e}")
+        messagebox.showerror("Erro", f"Erro ao inicializar PaddleOCR.\nVerifique os logs para mais detalhes.\n{e}")
+        ocr = None  # Define ocr como None para evitar erros posteriores
+else:
+    ocr = None
 
 # Funções GUI
-
 def selecionar_pasta_pdfs():
     global pasta_pdfs_var, file_listbox # Assegura que estamos usando as globais
     folder = filedialog.askdirectory(title="Selecione a pasta de PDFs")
@@ -249,7 +302,7 @@ def create_gui():
     global pasta_pdfs_var, arquivo_saida_var, file_listbox, status_label, root
 
     root = tk.Tk()
-    root.title("Extração de Dados de Faturas")
+    root.title("Invoice data extracion")
     root.geometry("600x450") # Tamanho inicial um pouco maior
 
     pasta_pdfs_var = tk.StringVar()
@@ -262,35 +315,35 @@ def create_gui():
     main_frame.columnconfigure(1, weight=1) # Coluna do Entry expande
 
     # Seletor de Pasta de PDFs
-    tk.Label(main_frame, text="Pasta dos PDFs:").grid(row=0, column=0, sticky="w", pady=5, padx=5)
+    tk.Label(main_frame, text="PDFs folder:").grid(row=0, column=0, sticky="w", pady=5, padx=5)
     entry_pasta_pdfs = tk.Entry(main_frame, textvariable=pasta_pdfs_var, width=50)
     entry_pasta_pdfs.grid(row=0, column=1, sticky="ew", pady=5, padx=5)
     btn_selecionar_pasta = tk.Button(main_frame, text="Selecionar Pasta", command=selecionar_pasta_pdfs)
     btn_selecionar_pasta.grid(row=0, column=2, sticky="e", pady=5, padx=5)
 
     # Seletor de Arquivo de Saída
-    tk.Label(main_frame, text="Salvar Excel em:").grid(row=1, column=0, sticky="w", pady=5, padx=5)
+    tk.Label(main_frame, text="Save file in:").grid(row=1, column=0, sticky="w", pady=5, padx=5)
     entry_arquivo_saida = tk.Entry(main_frame, textvariable=arquivo_saida_var, width=50)
     entry_arquivo_saida.grid(row=1, column=1, sticky="ew", pady=5, padx=5)
     btn_selecionar_saida = tk.Button(main_frame, text="Selecionar Arquivo", command=selecionar_arquivo_saida)
     btn_selecionar_saida.grid(row=1, column=2, sticky="e", pady=5, padx=5)
 
     # Botão Iniciar
-    btn_iniciar = tk.Button(main_frame, text="Iniciar Extração", command=iniciar_extracao_gui, bg="lightblue", font=("Arial", 10, "bold"))
+    btn_iniciar = tk.Button(main_frame, text="Starting extraction", command=iniciar_extracao_gui, bg="lightblue", font=("Arial", 10, "bold"))
     btn_iniciar.grid(row=2, column=0, columnspan=3, pady=15, ipady=5) # ipady para altura interna
 
     # Status Label
-    status_label = tk.Label(main_frame, text="Aguardando...", fg="blue", wraplength=550, justify=tk.LEFT) # wraplength para quebrar linha
+    status_label = tk.Label(main_frame, text="Waiting...", fg="blue", wraplength=550, justify=tk.LEFT) 
     status_label.grid(row=3, column=0, columnspan=3, sticky="ew", pady=5)
 
     # Listbox para mostrar arquivos
-    tk.Label(main_frame, text="Arquivos na pasta selecionada:").grid(row=4, column=0, columnspan=3, sticky="w", pady=(10,0))
+    tk.Label(main_frame, text="Files in the selected folder:").grid(row=4, column=0, columnspan=3, sticky="w", pady=(10,0))
     listbox_frame = tk.Frame(main_frame)
     listbox_frame.grid(row=5, column=0, columnspan=3, sticky="nsew", pady=5)
-    main_frame.rowconfigure(5, weight=1) # Linha da Listbox expande
-    listbox_frame.columnconfigure(0, weight=1) # Coluna da Listbox expande
+    main_frame.rowconfigure(5, weight=1) 
+    listbox_frame.columnconfigure(0, weight=1) 
 
-    file_listbox = Listbox(listbox_frame, width=70, height=10) # Aumentei a largura
+    file_listbox = Listbox(listbox_frame, width=70, height=10) 
     file_listbox.grid(row=0, column=0, sticky="nsew")
 
     scrollbar = Scrollbar(listbox_frame, orient="vertical", command=file_listbox.yview)
