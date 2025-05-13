@@ -45,8 +45,8 @@ jobs:
           --collect-all paddle ^
           --collect-all ppocr ^
           --collect-all ppstructure ^
-          --add-data "poppler-24.08.0;poppler-24.08.0" ^ # Inclui a pasta Poppler descompactada
-          --add-data "paddle_models;paddle_models" ^ # Inclui a pasta PaddleOCR descompactada
+          --add-data "poppler-24.08.0;poppler-24.08.0" ^
+          --add-data "paddle_models;paddle_models" ^
           main_processor.py
     - name: Upload artifact
       uses: actions/upload-artifact@v4
