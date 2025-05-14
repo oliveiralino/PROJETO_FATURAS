@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+main_processor.py
+Script principal com interface Tkinter para selecionar pasta de PDFs e arquivo de saída,
+e extrair dados usando script_digital.py ou script_ocr.py conforme tipo de fatura.
+"""
 import tkinter as tk
 from tkinter import filedialog, messagebox, Listbox, Scrollbar
 import threading
@@ -17,6 +24,13 @@ import script_ocr    # Seu script para faturas OCR
 # Configuração logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s')
 
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename="extratorfaturas.log",
+    filemode="w",
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 # Variáveis de controle globais para GUI
 pasta_pdfs_var = None
@@ -29,7 +43,7 @@ root = None # Adicionado para acesso global, se necessário para root.update_idl
 
 def selecionar_pasta_pdfs():
     global pasta_pdfs_var, file_listbox # Assegura que estamos usando as globais
-    folder = filedialog.askdirectory(title="Select PDFs folder: ")
+    folder = filedialog.askdirectory(title="Selecione a pasta de PDFs")
     if folder:
         pasta_pdfs_var.set(folder)
         atualizar_listbox(folder)
@@ -43,15 +57,15 @@ def selecionar_arquivo_saida():
         arquivo_saida_var.set(file)
 
 def atualizar_listbox(folder_path):
-    global file_listbox 
+    global file_listbox # Assegura que estamos usando a global
     if file_listbox:
         file_listbox.delete(0, tk.END)
         try:
             for f in sorted(Path(folder_path).glob("*.pdf")):
                 file_listbox.insert(tk.END, f.name)
         except Exception as e:
-            logging.error(f"Error listing files in the folder {folder_path}: {e}")
-            messagebox.showerror("Folder Error", f"Could not list files in the folder: {folder_path}\n{e}")
+            logging.error(f"Erro ao listar arquivos da pasta {folder_path}: {e}")
+            messagebox.showerror("Erro de Pasta", f"Não foi possível listar arquivos da pasta: {folder_path}\n{e}")
 
 
 def iniciar_extracao_gui():
@@ -61,13 +75,13 @@ def iniciar_extracao_gui():
     output_file_path = arquivo_saida_var.get().strip()
 
     if not folder or not os.path.isdir(folder):
-        messagebox.showerror("Input Error", "Please select a valid PDF folder.")
+        messagebox.showerror("Erro de Entrada", "Por favor, selecione uma pasta de PDFs válida.")
         return
     if not output_file_path:
-        messagebox.showerror("Input Error", "Please select an output file.")
+        messagebox.showerror("Erro de Entrada", "Por favor, selecione um arquivo de saída.")
         return
 
-    status_label.config(text="Processing... Please wait.", fg="blue")
+    status_label.config(text="Processando... Por favor, aguarde.", fg="blue")
     # Para garantir que a GUI atualize antes da thread começar
     if root:
         root.update_idletasks()
@@ -93,7 +107,7 @@ def detect_pdf_type(pdf_path: Path) -> str:
             return 'OCR'
 
         page = doc.load_page(0)  # Analisa apenas a primeira página para rapidez
-
+        
         # Usar get_text("blocks") pode ser mais robusto que "words" para contar unidades de texto significativas
         # blocks retorna tuplas (x0, y0, x1, y1, "text", block_no, block_type)
         # block_type = 0 para texto, 1 para imagem
@@ -113,7 +127,7 @@ def detect_pdf_type(pdf_path: Path) -> str:
         if num_images > 0 and num_text_elements < 20: # Se tiver imagens e muito pouco texto
             logging.info(f"Arquivo '{pdf_path.name}' detectado como: OCR (textos: {num_text_elements}, imagens: {num_images})")
             return 'OCR'
-
+        
         # Fallback: Se não for claramente um ou outro, pode ser um digital "pobre" ou um OCR com algum texto.
         # Dependendo dos seus arquivos, pode ser melhor assumir OCR como fallback se 'Digital' falhar.
         # Por ora, mantendo o seu fallback original se ajustado ao novo critério.
@@ -144,22 +158,24 @@ def run_extraction_wrapper(folder, output_file):
             success_msg = f"Extração concluída! {len(all_results)} arquivos processados. Salvo em: {output_file}"
             logging.info(success_msg)
             status_label.config(text="Extração concluída!", fg="green")
-            # messagebox.showinfo("Concluído", success_msg)
+            messagebox.showinfo("Concluído", success_msg)
         else:
             info_msg = "Nenhum arquivo PDF encontrado ou processado na pasta."
             logging.info(info_msg)
             status_label.config(text=info_msg, fg="orange")
-            # messagebox.showinfo("Concluído", info_msg)
+            messagebox.showinfo("Concluído", info_msg)
 
     except Exception as e:
         error_msg = f"Erro geral durante a extração ou ao salvar o Excel: {e}"
         logging.error(error_msg, exc_info=True) # Loga o traceback completo
         status_label.config(text="Erro na extração!", fg="red")
-        # messagebox.showerror("Erro Crítico", error_msg)
+        messagebox.showerror("Erro Crítico", error_msg)
 
 
 def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
-
+    """
+    Processa os PDFs em uma pasta, detecta seu tipo e chama o script de extração apropriado.
+    """
     global status_label, root # Para atualizar a GUI
 
     all_extracted_data = []
@@ -180,7 +196,7 @@ def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
             root.update_idletasks() # Força a atualização da GUI
 
         dados_fatura = {"ARQUIVO": pdf_path.name, "SOURCE_DETECTION": "Indefinido", "SOURCE_EXTRACTION": "Nenhum"}
-
+        
         try:
             tipo_fatura = detect_pdf_type(pdf_path)
             dados_fatura["SOURCE_DETECTION"] = tipo_fatura
@@ -195,7 +211,7 @@ def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
                 else:
                     dados_fatura["ERRO"] = "Extrator digital não retornou dados."
                     dados_fatura["SOURCE_EXTRACTION"] = "Digital (Falhou)"
-
+            
             elif tipo_fatura == 'OCR':
                 logging.info(f"Chamando script_ocr para: {pdf_path.name}")
                 # Suposição: script_ocr.py tem processar_pdf_ocr(pdf_path)
@@ -211,7 +227,7 @@ def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
                 # Caso detect_pdf_type retorne algo inesperado (não deveria acontecer com a lógica atual)
                 logging.error(f"Tipo de fatura desconhecido '{tipo_fatura}' para {pdf_path.name}.")
                 dados_fatura["ERRO"] = f"Tipo de detecção desconhecido: {tipo_fatura}"
-
+            
             # Verifica se houve um erro durante a extração, mesmo que os dados tenham sido parcialmente preenchidos
             if "ERRO" in dados_fatura and dados_fatura.get("ERRO"):
                  logging.warning(f"Processado com erro {pdf_path.name}: {dados_fatura['ERRO']}")
@@ -222,7 +238,7 @@ def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
             logging.error(f"Exceção ao processar o arquivo '{pdf_path.name}': {e}", exc_info=True)
             dados_fatura["ERRO"] = f"Exceção: {str(e)}"
             dados_fatura["SOURCE_EXTRACTION"] = "Falha Geral"
-
+        
         all_extracted_data.append(dados_fatura)
 
     return all_extracted_data
@@ -232,7 +248,7 @@ def create_gui():
     global pasta_pdfs_var, arquivo_saida_var, file_listbox, status_label, root
 
     root = tk.Tk()
-    root.title("Invoice data extracion")
+    root.title("Extração de Dados de Faturas")
     root.geometry("600x450") # Tamanho inicial um pouco maior
 
     pasta_pdfs_var = tk.StringVar()
@@ -245,35 +261,35 @@ def create_gui():
     main_frame.columnconfigure(1, weight=1) # Coluna do Entry expande
 
     # Seletor de Pasta de PDFs
-    tk.Label(main_frame, text="PDFs folder:").grid(row=0, column=0, sticky="w", pady=5, padx=5)
+    tk.Label(main_frame, text="Pasta dos PDFs:").grid(row=0, column=0, sticky="w", pady=5, padx=5)
     entry_pasta_pdfs = tk.Entry(main_frame, textvariable=pasta_pdfs_var, width=50)
     entry_pasta_pdfs.grid(row=0, column=1, sticky="ew", pady=5, padx=5)
     btn_selecionar_pasta = tk.Button(main_frame, text="Selecionar Pasta", command=selecionar_pasta_pdfs)
     btn_selecionar_pasta.grid(row=0, column=2, sticky="e", pady=5, padx=5)
 
     # Seletor de Arquivo de Saída
-    tk.Label(main_frame, text="Save file in:").grid(row=1, column=0, sticky="w", pady=5, padx=5)
+    tk.Label(main_frame, text="Salvar Excel em:").grid(row=1, column=0, sticky="w", pady=5, padx=5)
     entry_arquivo_saida = tk.Entry(main_frame, textvariable=arquivo_saida_var, width=50)
     entry_arquivo_saida.grid(row=1, column=1, sticky="ew", pady=5, padx=5)
     btn_selecionar_saida = tk.Button(main_frame, text="Selecionar Arquivo", command=selecionar_arquivo_saida)
     btn_selecionar_saida.grid(row=1, column=2, sticky="e", pady=5, padx=5)
 
     # Botão Iniciar
-    btn_iniciar = tk.Button(main_frame, text="Starting extraction", command=iniciar_extracao_gui, bg="lightblue", font=("Arial", 10, "bold"))
+    btn_iniciar = tk.Button(main_frame, text="Iniciar Extração", command=iniciar_extracao_gui, bg="lightblue", font=("Arial", 10, "bold"))
     btn_iniciar.grid(row=2, column=0, columnspan=3, pady=15, ipady=5) # ipady para altura interna
 
     # Status Label
-    status_label = tk.Label(main_frame, text="Waiting...", fg="blue", wraplength=550, justify=tk.LEFT) 
+    status_label = tk.Label(main_frame, text="Aguardando...", fg="blue", wraplength=550, justify=tk.LEFT) # wraplength para quebrar linha
     status_label.grid(row=3, column=0, columnspan=3, sticky="ew", pady=5)
 
     # Listbox para mostrar arquivos
-    tk.Label(main_frame, text="Files in the selected folder:").grid(row=4, column=0, columnspan=3, sticky="w", pady=(10,0))
+    tk.Label(main_frame, text="Arquivos na pasta selecionada:").grid(row=4, column=0, columnspan=3, sticky="w", pady=(10,0))
     listbox_frame = tk.Frame(main_frame)
     listbox_frame.grid(row=5, column=0, columnspan=3, sticky="nsew", pady=5)
-    main_frame.rowconfigure(5, weight=1) 
-    listbox_frame.columnconfigure(0, weight=1) 
+    main_frame.rowconfigure(5, weight=1) # Linha da Listbox expande
+    listbox_frame.columnconfigure(0, weight=1) # Coluna da Listbox expande
 
-    file_listbox = Listbox(listbox_frame, width=70, height=10) 
+    file_listbox = Listbox(listbox_frame, width=70, height=10) # Aumentei a largura
     file_listbox.grid(row=0, column=0, sticky="nsew")
 
     scrollbar = Scrollbar(listbox_frame, orient="vertical", command=file_listbox.yview)
