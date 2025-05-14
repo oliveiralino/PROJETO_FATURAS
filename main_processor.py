@@ -43,7 +43,7 @@ root = None # Adicionado para acesso global, se necessário para root.update_idl
 
 def selecionar_pasta_pdfs():
     global pasta_pdfs_var, file_listbox # Assegura que estamos usando as globais
-    folder = filedialog.askdirectory(title="Selecione a pasta de PDFs")
+    folder = filedialog.askdirectory(title="Select the PDFs folder")
     if folder:
         pasta_pdfs_var.set(folder)
         atualizar_listbox(folder)
@@ -65,7 +65,7 @@ def atualizar_listbox(folder_path):
                 file_listbox.insert(tk.END, f.name)
         except Exception as e:
             logging.error(f"Erro ao listar arquivos da pasta {folder_path}: {e}")
-            messagebox.showerror("Erro de Pasta", f"Não foi possível listar arquivos da pasta: {folder_path}\n{e}")
+            messagebox.showerror("Folder Error", f"Could not list files in the folder: {folder_path}\n{e}")
 
 
 def iniciar_extracao_gui():
@@ -75,13 +75,13 @@ def iniciar_extracao_gui():
     output_file_path = arquivo_saida_var.get().strip()
 
     if not folder or not os.path.isdir(folder):
-        messagebox.showerror("Erro de Entrada", "Por favor, selecione uma pasta de PDFs válida.")
+        messagebox.showerror("Input Error", "Please select a valid PDFs folder.")
         return
     if not output_file_path:
-        messagebox.showerror("Erro de Entrada", "Por favor, selecione um arquivo de saída.")
+        messagebox.showerror("Input Error", "Please select a valid output file.")
         return
 
-    status_label.config(text="Processando... Por favor, aguarde.", fg="blue")
+    status_label.config(text="Processing... Please wait.", fg="blue")
     # Para garantir que a GUI atualize antes da thread começar
     if root:
         root.update_idletasks()
@@ -120,7 +120,7 @@ def detect_pdf_type(pdf_path: Path) -> str:
 
         logging.debug(f"Análise de {pdf_path.name}: Text Elements={num_text_elements}, Images={num_images}")
 
-        # Critérios de decisão (ajuste os limiares conforme necessário)
+        # Critérios de decisão 
         if num_text_elements > 70:  # Se tiver bastante texto, é provável que seja digital
             logging.info(f"Arquivo '{pdf_path.name}' detectado como: Digital (textos: {num_text_elements})")
             return 'Digital'
@@ -128,10 +128,7 @@ def detect_pdf_type(pdf_path: Path) -> str:
             logging.info(f"Arquivo '{pdf_path.name}' detectado como: OCR (textos: {num_text_elements}, imagens: {num_images})")
             return 'OCR'
         
-        # Fallback: Se não for claramente um ou outro, pode ser um digital "pobre" ou um OCR com algum texto.
-        # Dependendo dos seus arquivos, pode ser melhor assumir OCR como fallback se 'Digital' falhar.
-        # Por ora, mantendo o seu fallback original se ajustado ao novo critério.
-        # Se tiver algum texto mas não muito, e poucas/nenhuma imagem, ainda tentar digital.
+        
         if num_text_elements >= 20 :
              logging.info(f"Arquivo '{pdf_path.name}' detectado como: Digital (fallback - algum texto: {num_text_elements})")
              return 'Digital'
@@ -155,21 +152,21 @@ def run_extraction_wrapper(folder, output_file):
         if all_results: # Somente salva se houver resultados (mesmo que sejam erros)
             df = pd.DataFrame(all_results)
             df.to_excel(output_file, index=False, engine='openpyxl')
-            success_msg = f"Extração concluída! {len(all_results)} arquivos processados. Salvo em: {output_file}"
+            success_msg = f"Extraction completed! {len(all_results)} files processed. Saved to: {output_file}"
             logging.info(success_msg)
-            status_label.config(text="Extração concluída!", fg="green")
-            messagebox.showinfo("Concluído", success_msg)
+            status_label.config(text="Extraction completed!", fg="green")
+            messagebox.showinfo("Completed", success_msg)
         else:
-            info_msg = "Nenhum arquivo PDF encontrado ou processado na pasta."
+            info_msg = "No PDF file found or processed in the folder."
             logging.info(info_msg)
             status_label.config(text=info_msg, fg="orange")
             messagebox.showinfo("Concluído", info_msg)
 
     except Exception as e:
-        error_msg = f"Erro geral durante a extração ou ao salvar o Excel: {e}"
+        error_msg = f"General error during extraction or when saving the Excel file: {e}"
         logging.error(error_msg, exc_info=True) # Loga o traceback completo
-        status_label.config(text="Erro na extração!", fg="red")
-        messagebox.showerror("Erro Crítico", error_msg)
+        status_label.config(text="Error during extraction!", fg="red")
+        messagebox.showerror("Critical Error", error_msg)
 
 
 def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
@@ -248,7 +245,7 @@ def create_gui():
     global pasta_pdfs_var, arquivo_saida_var, file_listbox, status_label, root
 
     root = tk.Tk()
-    root.title("Extração de Dados de Faturas")
+    root.title("Invoice Data Extraction")
     root.geometry("600x450") # Tamanho inicial um pouco maior
 
     pasta_pdfs_var = tk.StringVar()
@@ -261,21 +258,21 @@ def create_gui():
     main_frame.columnconfigure(1, weight=1) # Coluna do Entry expande
 
     # Seletor de Pasta de PDFs
-    tk.Label(main_frame, text="Pasta dos PDFs:").grid(row=0, column=0, sticky="w", pady=5, padx=5)
+    tk.Label(main_frame, text="PDFs folder:").grid(row=0, column=0, sticky="w", pady=5, padx=5)
     entry_pasta_pdfs = tk.Entry(main_frame, textvariable=pasta_pdfs_var, width=50)
     entry_pasta_pdfs.grid(row=0, column=1, sticky="ew", pady=5, padx=5)
     btn_selecionar_pasta = tk.Button(main_frame, text="Selecionar Pasta", command=selecionar_pasta_pdfs)
     btn_selecionar_pasta.grid(row=0, column=2, sticky="e", pady=5, padx=5)
 
     # Seletor de Arquivo de Saída
-    tk.Label(main_frame, text="Salvar Excel em:").grid(row=1, column=0, sticky="w", pady=5, padx=5)
+    tk.Label(main_frame, text="Save Excel to:").grid(row=1, column=0, sticky="w", pady=5, padx=5)
     entry_arquivo_saida = tk.Entry(main_frame, textvariable=arquivo_saida_var, width=50)
     entry_arquivo_saida.grid(row=1, column=1, sticky="ew", pady=5, padx=5)
     btn_selecionar_saida = tk.Button(main_frame, text="Selecionar Arquivo", command=selecionar_arquivo_saida)
     btn_selecionar_saida.grid(row=1, column=2, sticky="e", pady=5, padx=5)
 
     # Botão Iniciar
-    btn_iniciar = tk.Button(main_frame, text="Iniciar Extração", command=iniciar_extracao_gui, bg="lightblue", font=("Arial", 10, "bold"))
+    btn_iniciar = tk.Button(main_frame, text="Start Extraction", command=iniciar_extracao_gui, bg="lightblue", font=("Arial", 10, "bold"))
     btn_iniciar.grid(row=2, column=0, columnspan=3, pady=15, ipady=5) # ipady para altura interna
 
     # Status Label
@@ -283,7 +280,7 @@ def create_gui():
     status_label.grid(row=3, column=0, columnspan=3, sticky="ew", pady=5)
 
     # Listbox para mostrar arquivos
-    tk.Label(main_frame, text="Arquivos na pasta selecionada:").grid(row=4, column=0, columnspan=3, sticky="w", pady=(10,0))
+    tk.Label(main_frame, text="Files in the selected folder:").grid(row=4, column=0, columnspan=3, sticky="w", pady=(10,0))
     listbox_frame = tk.Frame(main_frame)
     listbox_frame.grid(row=5, column=0, columnspan=3, sticky="nsew", pady=5)
     main_frame.rowconfigure(5, weight=1) # Linha da Listbox expande
