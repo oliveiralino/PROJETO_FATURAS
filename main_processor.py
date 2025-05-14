@@ -8,93 +8,25 @@ import fitz  # PyMuPDF
 import pandas as pd
 import numpy
 import paddleocr
-import sys 
 
 
 # Import módulos de extração
-import script_digital  #  script para faturas digitais
-import script_ocr    #  script para faturas OCR
+import script_digital  # Seu script para faturas digitais
+import script_ocr    # Seu script para faturas OCR
 
 # Configuração logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s')
 
-import logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename="extratorfaturas.log",
-    filemode="w",
-    format="%(asctime)s [%(levelname)s] %(message)s"
-)
 
 # Variáveis de controle globais para GUI
 pasta_pdfs_var = None
 arquivo_saida_var = None
 file_listbox = None
 status_label = None
-root = None
-
-# Função para definir os caminhos dos modelos
-def get_model_paths():
-    """
-    Define os caminhos para os modelos PaddleOCR, considerando se o código está
-    rodando dentro de um executável congelado (PyInstaller).
-    """
-    base_model_dir = "paddle_models"  # Diretório base dos modelos
-
-    if getattr(sys, 'frozen', False):
-        # Código está rodando dentro do .exe
-        base_dir = os.path.dirname(sys.executable)
-        model_dir = os.path.join(base_dir, base_model_dir)
-    else:
-        # Código está rodando como script
-        model_dir = base_model_dir
-
-    # Certifique-se de que o caminho existe!
-    if not os.path.isdir(model_dir):
-        logging.error(f"Diretório de modelos não encontrado: {model_dir}")
-        # messagebox.showerror("Erro", f"Diretório de modelos não encontrado: {model_dir}\nCertifique-se de que a pasta 'paddle_models' está no mesmo diretório do executável.")
-        return None, None, None, None # Retorna None para indicar erro
-
-    det_model_dir = os.path.join(model_dir, 'det')
-    rec_model_dir = os.path.join(model_dir, 'rec')
-    cls_model_dir = os.path.join(model_dir, 'cls')
-    layout_model_dir = os.path.join(model_dir, 'layout') # Adicionado o diretório layout
-
-    # Verificando se os diretorios existem
-    if not all([os.path.isdir(det_model_dir), os.path.isdir(rec_model_dir), os.path.isdir(cls_model_dir), os.path.isdir(layout_model_dir)]):
-         logging.error(f"Diretorio de modelos det: {det_model_dir}")
-         logging.error(f"Diretorio de modelos rec: {rec_model_dir}")
-         logging.error(f"Diretorio de modelos cls: {cls_model_dir}")
-         logging.error(f"Diretorio de modelos layout: {layout_model_dir}")
-         # messagebox.showerror("Erro", "Um ou mais diretórios de modelos PaddleOCR não foram encontrados.\nCertifique-se de que a estrutura de diretórios dentro de 'paddle_models' está correta (det, rec, cls, layout).")
-         return None, None, None, None
-
-    return det_model_dir, rec_model_dir, cls_model_dir, layout_model_dir
-
-# Inicialização do PaddleOCR
-det_model_dir, rec_model_dir, cls_model_dir, layout_model_dir = get_model_paths()
-if det_model_dir and rec_model_dir and cls_model_dir and layout_model_dir:
-    try:
-        ocr = paddleocr.PaddleOCR(
-            use_angle_cls=True,
-            lang='en',
-            det_model_dir=det_model_dir,
-            rec_model_dir=rec_model_dir,
-            cls_model_dir=cls_model_dir,
-            layout_model_dir = layout_model_dir, # Adicionado
-            show_log=False # Desativa o log do PaddleOCR
-            #device = 'cpu' # Forçar CPU se necessário (teste)
-        )
-        logging.info("PaddleOCR inicializado com sucesso usando modelos locais.")
-
-    except Exception as e:
-        logging.error(f"Erro ao inicializar PaddleOCR: {e}")
-        # messagebox.showerror("Erro", f"Erro ao inicializar PaddleOCR.\nVerifique os logs para mais detalhes.\n{e}")
-        ocr = None  # Define ocr como None para evitar erros posteriores
-else:
-    ocr = None
+root = None # Adicionado para acesso global, se necessário para root.update_idletasks()
 
 # Funções GUI
+
 def selecionar_pasta_pdfs():
     global pasta_pdfs_var, file_listbox # Assegura que estamos usando as globais
     folder = filedialog.askdirectory(title="Select PDFs folder: ")
@@ -106,12 +38,12 @@ def selecionar_arquivo_saida():
     global arquivo_saida_var # Assegura que estamos usando a global
     file = filedialog.asksaveasfilename(defaultextension=".xlsx",
                                        filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
-                                       title="Save result as: ")
+                                       title="Salvar resultados como")
     if file:
         arquivo_saida_var.set(file)
 
 def atualizar_listbox(folder_path):
-    global file_listbox # Assegura que estamos usando a global
+    global file_listbox 
     if file_listbox:
         file_listbox.delete(0, tk.END)
         try:
@@ -119,7 +51,7 @@ def atualizar_listbox(folder_path):
                 file_listbox.insert(tk.END, f.name)
         except Exception as e:
             logging.error(f"Error listing files in the folder {folder_path}: {e}")
-            # messagebox.showerror("Folder Error", f"Could not list files in the folder: {folder_path}\n{e}")
+            messagebox.showerror("Folder Error", f"Could not list files in the folder: {folder_path}\n{e}")
 
 
 def iniciar_extracao_gui():
@@ -161,7 +93,7 @@ def detect_pdf_type(pdf_path: Path) -> str:
             return 'OCR'
 
         page = doc.load_page(0)  # Analisa apenas a primeira página para rapidez
-        
+
         # Usar get_text("blocks") pode ser mais robusto que "words" para contar unidades de texto significativas
         # blocks retorna tuplas (x0, y0, x1, y1, "text", block_no, block_type)
         # block_type = 0 para texto, 1 para imagem
@@ -181,7 +113,7 @@ def detect_pdf_type(pdf_path: Path) -> str:
         if num_images > 0 and num_text_elements < 20: # Se tiver imagens e muito pouco texto
             logging.info(f"Arquivo '{pdf_path.name}' detectado como: OCR (textos: {num_text_elements}, imagens: {num_images})")
             return 'OCR'
-        
+
         # Fallback: Se não for claramente um ou outro, pode ser um digital "pobre" ou um OCR com algum texto.
         # Dependendo dos seus arquivos, pode ser melhor assumir OCR como fallback se 'Digital' falhar.
         # Por ora, mantendo o seu fallback original se ajustado ao novo critério.
@@ -212,12 +144,12 @@ def run_extraction_wrapper(folder, output_file):
             success_msg = f"Extração concluída! {len(all_results)} arquivos processados. Salvo em: {output_file}"
             logging.info(success_msg)
             status_label.config(text="Extração concluída!", fg="green")
-            messagebox.showinfo("Concluído", success_msg)
+            # messagebox.showinfo("Concluído", success_msg)
         else:
             info_msg = "Nenhum arquivo PDF encontrado ou processado na pasta."
             logging.info(info_msg)
             status_label.config(text=info_msg, fg="orange")
-            messagebox.showinfo("Concluído", info_msg)
+            # messagebox.showinfo("Concluído", info_msg)
 
     except Exception as e:
         error_msg = f"Erro geral durante a extração ou ao salvar o Excel: {e}"
@@ -227,9 +159,7 @@ def run_extraction_wrapper(folder, output_file):
 
 
 def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
-    """
-    Processa os PDFs em uma pasta, detecta seu tipo e chama o script de extração apropriado.
-    """
+
     global status_label, root # Para atualizar a GUI
 
     all_extracted_data = []
@@ -250,7 +180,7 @@ def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
             root.update_idletasks() # Força a atualização da GUI
 
         dados_fatura = {"ARQUIVO": pdf_path.name, "SOURCE_DETECTION": "Indefinido", "SOURCE_EXTRACTION": "Nenhum"}
-        
+
         try:
             tipo_fatura = detect_pdf_type(pdf_path)
             dados_fatura["SOURCE_DETECTION"] = tipo_fatura
@@ -265,7 +195,7 @@ def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
                 else:
                     dados_fatura["ERRO"] = "Extrator digital não retornou dados."
                     dados_fatura["SOURCE_EXTRACTION"] = "Digital (Falhou)"
-            
+
             elif tipo_fatura == 'OCR':
                 logging.info(f"Chamando script_ocr para: {pdf_path.name}")
                 # Suposição: script_ocr.py tem processar_pdf_ocr(pdf_path)
@@ -281,7 +211,7 @@ def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
                 # Caso detect_pdf_type retorne algo inesperado (não deveria acontecer com a lógica atual)
                 logging.error(f"Tipo de fatura desconhecido '{tipo_fatura}' para {pdf_path.name}.")
                 dados_fatura["ERRO"] = f"Tipo de detecção desconhecido: {tipo_fatura}"
-            
+
             # Verifica se houve um erro durante a extração, mesmo que os dados tenham sido parcialmente preenchidos
             if "ERRO" in dados_fatura and dados_fatura.get("ERRO"):
                  logging.warning(f"Processado com erro {pdf_path.name}: {dados_fatura['ERRO']}")
@@ -292,7 +222,7 @@ def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
             logging.error(f"Exceção ao processar o arquivo '{pdf_path.name}': {e}", exc_info=True)
             dados_fatura["ERRO"] = f"Exceção: {str(e)}"
             dados_fatura["SOURCE_EXTRACTION"] = "Falha Geral"
-        
+
         all_extracted_data.append(dados_fatura)
 
     return all_extracted_data
