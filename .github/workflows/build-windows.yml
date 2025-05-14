@@ -26,6 +26,7 @@ jobs:
         7z x paddle_models.7z -o.
         7z x poppler.7z -o.
 
+
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
@@ -38,7 +39,7 @@ jobs:
     - name: Build standalone exe
       shell: cmd
       run: |
-        pyinstaller --clean --onefile --name ExtratorFaturas ^
+        pyinstaller --clean --onefile --noconsole --name ExtratorFaturas ^
           --additional-hooks-dir hooks ^
           --hidden-import paddle ^
           --collect-all paddleocr ^
