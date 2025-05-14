@@ -12,19 +12,21 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
 
-    - name: Recombine 7z volumes into single archive (Poppler)
+    - name: Recombine 7z volumes into single archive
       shell: cmd
       run: copy /b poppler.7z.* poppler.7z
 
-    - name: Recombine 7z volumes into single archive (PaddleOCR)
+    - name: Unzip assets (Poppler)
+      shell: cmd
+      run: 7z x poppler.7z -o.
+
+    - name: Recombine PaddleOCR models
       shell: cmd
       run: copy /b paddle_models.7z.* paddle_models.7z
     
-    - name: Unzip assets (PaddleOCR and Poppler)
+    - name: Unzip PaddleOCR models
       shell: cmd
-      run: |
-        7z x paddle_models.7z -o.
-        7z x poppler.7z -o.
+      run: 7z x paddle_models.7z -opaddle_models
 
 
     - name: Set up Python 3.10
@@ -39,7 +41,7 @@ jobs:
     - name: Build standalone exe
       shell: cmd
       run: |
-        pyinstaller --clean --onefile --name ExtratorFaturas ^
+        pyinstaller --clean --onefile --noconsole --name ExtratorFaturas ^
           --additional-hooks-dir hooks ^
           --hidden-import paddle ^
           --collect-all paddleocr ^
