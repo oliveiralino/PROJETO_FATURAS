@@ -223,7 +223,7 @@ def run_extraction_wrapper(folder, output_file):
         error_msg = f"Erro geral durante a extração ou ao salvar o Excel: {e}"
         logging.error(error_msg, exc_info=True) # Loga o traceback completo
         status_label.config(text="Erro na extração!", fg="red")
-        messagebox.showerror("Erro Crítico", error_msg)
+        # messagebox.showerror("Erro Crítico", error_msg)
 
 
 def run_extraction(folder_path_str: str, output_file_path_str: str) -> list:
